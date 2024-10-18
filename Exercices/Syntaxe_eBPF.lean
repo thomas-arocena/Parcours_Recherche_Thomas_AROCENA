@@ -41,10 +41,7 @@ inductive Statement
 /--Program is the Type that represent eBPF program and is simply made of Statement-/
 abbrev Program : Type := List Statement
 
-/-def rangeProgram(p : Program) : Nat -> Nat :=
-  fun (a : Nat) => if (a <= p.length) then a else p.length-/
-
 /-- State is a structure that represent a state of a program with pc(program counter) representing the position in the program and data representing the values of each register-/
 structure State where
-  pc : Int
-  reg : Register -> Nat
+  pc : Nat
+  reg : Register -> Int
