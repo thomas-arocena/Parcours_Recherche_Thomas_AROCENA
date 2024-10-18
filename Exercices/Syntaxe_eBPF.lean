@@ -48,21 +48,3 @@ abbrev Program : Type := List Statement
 structure State where
   pc : Int
   reg : Register -> Nat
-
-def add(src : Argument)(dst : Register)(s : State) : State :=
-  match src with
-  |imm => {pc := s.pc, reg := (fun r : Register => if r = dst then imm else s.reg r )}
-  |reg => {pc := s.pc, reg := (fun r : Register => if r = dst then s.reg src else s.reg r )}
-
-/--Function that takes an Nat offset and a State s and return the State with pc = pc + offset-/
-def ja(offset: Int)(s : State) : State :=
-  {s with pc:= s.pc+offset}
-
-/--Function that takes two Register src and dst and an offset and a State s and return the State with pc = pc + offset if dst = src and pc = pc + 1 otherwise-/
-def jed(src : Register)(dst : Register)(offset: Nat)(s : State) : State :=
-  if s.reg src = s.reg dst then
-    ja offset s
-  else State.mk (s.pc+1) s.reg
-
-  inductive Semantics(p : Program): State -> State -> Prop
-    |(s0 : State) => (s1 : State) => (∃(k:Nat) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=ja k) → (s1.pc = ja k s0) ):Semantics p s0 s1
