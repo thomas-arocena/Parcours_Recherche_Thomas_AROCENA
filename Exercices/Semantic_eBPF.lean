@@ -1,0 +1,84 @@
+import Syntaxe_eBPF
+
+def add(src : Argument)(dst : Register)(s : State) : State :=
+  |imm := {pc := s.pc, reg := (fun r : Register => if r = dst then imm else s.reg r )}
+  |reg := {pc := s.pc, reg := (fun r : Register => if r = dst then s.reg src else s.reg r )}
+
+/--Function that takes an Nat offset and a State s and return the State with pc = pc + offset-/
+def ja(offset: Int)(s : State) : State :=
+  {s with pc:= s.pc+offset}
+
+/--Function that takes two Register src and dst and an offset and a State s and return the State with pc = pc + offset if dst = src and pc = pc + 1 otherwise-/
+def jed(src : Register)(dst : Register)(offset: Nat)(s : State) : State :=
+  if s.reg src = s.reg dst then
+    ja offset s
+  else State.mk (s.pc+1) s.reg
+
+set_option autoImplicit false
+
+/-- Register is the Type for eBPF register, there are 11 registers -/
+inductive Register
+  |reg0
+  |reg1
+  |reg2
+  |reg3
+  |reg4
+  |reg5
+  |reg6
+  |reg7
+  |reg8
+  |reg9
+  |reg10
+  deriving DecidableEq
+
+abbrev Val := Int
+/-- Argument is the Type for eBPF expressions-/
+inductive Argument
+  /-- reg is an Argument from a register-/
+  | reg : Register -> Argument
+  /-- imm is an Argument from an immediate value-/
+  | imm : Val -> Argument
+
+/-- Statement is the type for eBPF instructions -/
+inductive Statement
+  /-- add take an Argument src and a Register dst and add src into dst (dst+=src)-/
+  | add : Argument -> Register -> Statement
+  /-- or take an Argument src and a Register dst and return (src or dst) into dst (dst = dst or src)-/
+  | or : Argument -> Register -> Statement
+  /-- mov take an Argument src and a Register dst and put src into dst (dst = src)-/
+  | mov : Argument -> Register -> Statement
+  /--bSwap take a Register dst and return the byte swap of dst into dst-/
+  | bSwap : Register -> Statement
+  /--ja take an Integer offset and add offset to pc-/
+  | ja : Int -> Statement
+  /--jeq take an Argument src, a Register dst, an Integer offset add offset to pc if dst==src-/
+  | jeq : Argument -> Register -> Int -> Statement
+
+/--Program is the Type that represent eBPF program and is simply made of Statement-/
+abbrev Program : Type := List Statement
+
+/-def rangeProgram(p : Program) : Nat -> Nat :=
+  fun (a : Nat) => if (a <= p.length) then a else p.length-/
+
+/-- State is a structure that represent a state of a program with pc(program counter) representing the position in the program and data representing the values of each register-/
+structure State where
+  pc : Int
+  reg : Register -> Nat
+
+def add(src : Argument)(dst : Register)(s : State) : State :=
+  match src with
+  |imm => {pc := s.pc, reg := (fun r : Register => if r = dst then imm else s.reg r )}
+  |reg => {pc := s.pc, reg := (fun r : Register => if r = dst then s.reg src else s.reg r )}
+
+/--Function that takes an Nat offset and a State s and return the State with pc = pc + offset-/
+def ja(offset: Int)(s : State) : State :=
+  {s with pc:= s.pc+offset}
+
+/--Function that takes two Register src and dst and an offset and a State s and return the State with pc = pc + offset if dst = src and pc = pc + 1 otherwise-/
+def jed(src : Register)(dst : Register)(offset: Nat)(s : State) : State :=
+  if s.reg src = s.reg dst then
+    ja offset s
+  else State.mk (s.pc+1) s.reg
+
+  inductive Semantics(p : Program): State -> State -> Prop
+    |(s0 : State) => (s1 : State) => (∃(k:Nat) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=ja k) → (s1.pc = ja k s0) ):Semantics p s0 s1
