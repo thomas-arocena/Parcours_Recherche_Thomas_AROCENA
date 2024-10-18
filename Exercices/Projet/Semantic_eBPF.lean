@@ -1,4 +1,4 @@
-import Syntaxe_eBPF
+import Projet.Syntaxe_eBPF
 
 /--Function that takes a function g from Register to Val, a Register α and a Val v and return a function f so that f(α) = v and f(r!=α)=g(r)-/
 def update(g : (Register → Val))(α : Register)(v : Val) : Register -> Val :=
@@ -7,11 +7,11 @@ def update(g : (Register → Val))(α : Register)(v : Val) : Register -> Val :=
 /--Function that takes an Argument src, a Register dst and a State s and return a new State where pc+=1 and dst = dst + src-/
 def add(src : Argument)(dst : Register)(s : State) : State :=
   match src with
-  |Argument.imm v_src => {pc := s.pc, reg := update s.reg dst ((s.reg dst)+v_src)}
-  |Argument.reg r_src => {pc := s.pc, reg := update s.reg dst ((s.reg dst) + (s.reg r_src))}
+  |Argument.imm v_src => {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst)+v_src)}
+  |Argument.reg r_src => {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst) + (s.reg r_src))}
 
 /--Function that takes an Argument src, a Register dst ans a State s and return a new State where pc+=1 and dst = dst or src-/
-def or(src : Argument)(dst : Register)(s : State) : State :=
+def orBis(src : Argument)(dst : Register)(s : State) : State :=
   match src with
   |Argument.imm v_src => {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst) ||| v_src)}
   |Argument.reg r_src => {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst) ||| (s.reg r_src))}
@@ -20,16 +20,11 @@ def or(src : Argument)(dst : Register)(s : State) : State :=
 def mov(src : Argument)(dst : Register)(s : State) : State :=
   match src with
   |Argument.imm v_src => {pc := s.pc + 1, reg := update s.reg dst v_src}
-  |Argument.reg r_src => {pc := s.pc + 1, reg := update s.reg dst (s.reg src)}
+  |Argument.reg r_src => {pc := s.pc + 1, reg := update s.reg dst (s.reg r_src)}
 
 /-
 def bSwap(dst : Register)(s : State) : State :=
   {pc = s.pc + 1, reg = update s.reg dst }-/
-
-
-
-
-
 
 /--Function that takes an Nat offset and a State s and return the State with pc = pc + offset-/
 def ja(offset: Int)(s : State) : State :=

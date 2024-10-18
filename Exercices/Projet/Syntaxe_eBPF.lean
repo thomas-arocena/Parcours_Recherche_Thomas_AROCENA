@@ -43,5 +43,5 @@ abbrev Program : Type := List Statement
 
 /-- State is a structure that represent a state of a program with pc(program counter) representing the position in the program and data representing the values of each register-/
 structure State where
-  pc : Nat
+  pc : Int
   reg : Register -> Int
