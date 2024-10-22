@@ -13,8 +13,19 @@ def add(src : Argument)(dst : Register)(s : State) : State :=
 /--Function that takes an Argument src, a Register dst ans a State s and return a new State where pc+=1 and dst = dst or src-/
 def orBis(src : Argument)(dst : Register)(s : State) : State :=
   match src with
-  |Argument.imm v_src => {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst) ||| v_src)}
+  |Argument.imm v_src => {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst) ||| v_src : Int)}
   |Argument.reg r_src => {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst) ||| (s.reg r_src))}
+
+
+
+def a₁ : Nat := 1
+def b₁ : Nat := 1
+
+def a₂ : Int := 1
+def b₂ : Int := 1
+
+#check a₁ ||| b₁
+#check a₂ ||| b₂
 
 /--Function that takes an Argument src, a Register dst ans a State s and return a new State with pc=s.pc+1 and dst = src-/
 def mov(src : Argument)(dst : Register)(s : State) : State :=
