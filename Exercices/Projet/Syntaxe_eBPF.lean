@@ -37,6 +37,7 @@ inductive Statement
   | ja : Int -> Statement
   /--jeq take an Argument src, a Register dst, an Integer offset add offset to pc if dst==src-/
   | jeq : Argument -> Register -> Int -> Statement
+  deriving Inhabited
 
 /--Program is the Type that represent eBPF program and is simply made of Statement-/
 abbrev Program : Type := List Statement
