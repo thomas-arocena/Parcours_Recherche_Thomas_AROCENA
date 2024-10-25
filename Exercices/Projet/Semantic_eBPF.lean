@@ -13,7 +13,7 @@ def add(src : Argument)(dst : Register)(s : State) : State :=
   |Argument.reg r_src => {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst) + (s.reg r_src))}
 
 /--Function that takes an Argument src, a Register dst ans a State s and return a new State where pc+=1 and dst = dst or src-/
-def or(src : Argument)(dst : Register)(s : State) : State :=
+def or_(src : Argument)(dst : Register)(s : State) : State :=
   match src with
   |Argument.imm v_src => if v_src >= 0 then {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst).toNat ||| v_src.toNat)} else {pc := s.pc + 1, reg := s.reg}
   |Argument.reg r_src => if (s.reg r_src) >= 0 then {pc := s.pc + 1, reg := update s.reg dst ((s.reg dst).toNat ||| (s.reg r_src).toNat)} else {pc := s.pc + 1, reg := s.reg}
@@ -54,8 +54,8 @@ def jed(src : Register)(dst : Register)(offset: Int)(s : State) : State :=
 
 /--Defining the relation from a State to another-/
 inductive Semantics(p: Program) : State -> State -> Prop
-  |ja : fun (s0 s1 : State) => (∃(k:Nat) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=ja k) → (s1 = ja k s0) ) : Semantics p s0 s1
-  |add : fun (s0 s1 : State) =>(∃(src : Argument), ∃(dst: Register) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=add src dst) → (s1 = add src dst s0)): Semantics p s0 s1
-  |mov : fun (s0 s1 : State) =>(∃(src : Argument), ∃(dst: Register) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=mov src dst) → (s1 = mov src dst s0)): Semantics p s0 s1
-  |jed : fun (s0 s1 : State) =>(∃(src : Argument), ∃(dst: Register), ∃(offset:Int) (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=jeq src dst offset) ∧ ((s0.pc+offset) ∈ [0 . p.length]) → (s1 = jed src dst offset s0)): Semantics p s0 s1
-  |or : fun (s0 s1 : State) =>(∃(src : Argument), ∃(dst: Register), (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=or src dst) → (s1 = or src dst s0)): Semantics p s0 s1
+  |ja (s0 s1 : State) : (∃(k:Nat) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=ja k) → (s1 = ja k s0) ) : Semantics p s0 s1
+  |add (s0 s1 : State): (∃(src : Argument), ∃(dst: Register) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=add src dst) → (s1 = add src dst s0)): Semantics p s0 s1
+  |mov (s0 s1 : State): (∃(src : Argument), ∃(dst: Register) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=mov src dst) → (s1 = mov src dst s0)): Semantics p s0 s1
+  |jed (s0 s1 : State): (∃(src : Argument), ∃(dst: Register), ∃(offset:Int) (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=jeq src dst offset) ∧ ((s0.pc+offset) ∈ [0 . p.length]) → (s1 = jed src dst offset s0)): Semantics p s0 s1
+  |or (s0 s1 : State): (∃(src : Argument), ∃(dst: Register), (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=or_ src dst) → (s1 = or src dst s0)): Semantics p s0 s1
