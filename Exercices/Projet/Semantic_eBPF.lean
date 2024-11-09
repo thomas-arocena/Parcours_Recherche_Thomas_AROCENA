@@ -34,6 +34,7 @@ def mov(src : Argument)(dst : Register)(s : State) : State :=
   |Argument.imm v_src => {pc := s.pc + 1, reg := update s.reg dst v_src}
   |Argument.reg r_src => {pc := s.pc + 1, reg := update s.reg dst (s.reg r_src)}
 
+
 /-
 def bSwap(dst : Register)(s : State) : State :=
   {pc = s.pc + 1, reg = update s.reg dst }-/
@@ -55,7 +56,6 @@ def setRange : ℕ → Set ℕ
 def a:=[1,3,24,3]
 #eval (a[4]?)
 
-
 /--Defining the relation from a State to another-/
 inductive Semantics (p : Program) : State -> State -> Prop
   | ja_ (s0 s1 : State) :
@@ -71,13 +71,5 @@ inductive Semantics (p : Program) : State -> State -> Prop
       (∃ (src : Argument), ∃ (dst : Register), ∃ (offset : Int), (s0.pc >=0)∧(s0.pc<=p.length) ∧ (p[(s0.pc).toNat]? = Statement.jeq src dst offset) ∧ ((s0.pc+offset) >=0)∧((s0.pc+offset)<=p.length) → (s1 = jeq src dst offset s0))
       → Semantics p s0 s1
   | or (s0 s1 : State) :
-      (∃ (src : Argument), ∃ (dst : Register),(s0.pc >=0)∧(s0.pc<=p.length) ∧ (p[(s0.pc).toNat]? = or_ src dst) → (s1 = or_ src dst s0))
+      (∃ (src : Argument), ∃ (dst : Register),(s0.pc >=0)∧(s0.pc<=p.length) ∧ (p[(s0.pc).toNat]? = Statement.or src dst) → (s1 = or_ src dst s0))
       → Semantics p s0 s1
-/-
-inductive Semantics(p: Program) : State -> State -> Prop
-  |ja (s0 s1 : State) : (∃(k:Nat) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=ja k) → (s1 = ja k s0) ) : Semantics p s0 s1
-  |add (s0 s1 : State): (∃(src : Argument), ∃(dst: Register) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=add src dst) → (s1 = add src dst s0)): Semantics p s0 s1
-  |mov (s0 s1 : State): (∃(src : Argument), ∃(dst: Register) , (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=mov src dst) → (s1 = mov src dst s0)): Semantics p s0 s1
-  |jed (s0 s1 : State): (∃(src : Argument), ∃(dst: Register), ∃(offset:Int) (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=jeq src dst offset) ∧ ((s0.pc+offset) ∈ [0 . p.length]) → (s1 = jed src dst offset s0)): Semantics p s0 s1
-  |or (s0 s1 : State): (∃(src : Argument), ∃(dst: Register), (s0.pc ∈ [0 . p.length]) ∧ (p[s0.pc]=or_ src dst) → (s1 = or src dst s0)): Semantics p s0 s1
--/

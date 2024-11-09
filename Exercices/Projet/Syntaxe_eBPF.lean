@@ -2,47 +2,77 @@ set_option autoImplicit false
 
 /-- Register is the Type for eBPF register, there are 11 registers -/
 inductive Register
+  /-- reg0 should contain the return value from function calls-/
   |reg0
+  /-- reg1 to reg5 contain arguments for function calls-/
   |reg1
+  /-- reg1 to reg5 contain arguments for function calls-/
   |reg2
+  /-- reg1 to reg5 contain arguments for function calls-/
   |reg3
+  /-- reg1 to reg5 contain arguments for function calls-/
   |reg4
+   /-- reg1 to reg5 contain arguments for function calls-/
   |reg5
+  /-- reg6 to reg9 registers that function calls will preserve-/
   |reg6
+  /-- reg6 to reg9 registers that function calls will preserve-/
   |reg7
+  /-- reg6 to reg9 registers that function calls will preserve-/
   |reg8
+  /-- reg6 to reg9 registers that function calls will preserve-/
   |reg9
+  /-- reg10 contains the (read-only) frame pointer to access stack-/
   |reg10
   deriving DecidableEq
 
 abbrev Val := Int
+
+inductive RegisterValue
+  /-- Register value is a pointer-/
+  |pointer : Val -> RegisterValue
+  /-- Register value is a scalar value-/
+  |scalar_value : Val -> RegisterValue
+  /-- Register has not been initialize -/
+  |not_init
+
 /-- Argument is the Type for eBPF expressions-/
 inductive Argument
   /-- reg is an Argument from a register-/
   | reg : Register -> Argument
   /-- imm is an Argument from an immediate value-/
   | imm : Val -> Argument
+  deriving BEq
+
+
 
 /-- Statement is the type for eBPF instructions -/
 inductive Statement
   /-- add take an Argument src and a Register dst and add src into dst (dst+=src)-/
   | add : Argument -> Register -> Statement
-  /-- or take an Argument src and a Register dst and return (src or dst) into dst (dst = dst or src)-/
+  /-- or takes an Argument src and a Register dst and return (src or dst) into dst (dst = dst or src)-/
   | or : Argument -> Register -> Statement
-  /-- mov take an Argument src and a Register dst and put src into dst (dst = src)-/
+  /-- mov takes an Argument src and a Register dst and put src into dst (dst = src)-/
   | mov : Argument -> Register -> Statement
-  /--bSwap take a Register dst and return the byte swap of dst into dst-/
+  /--bSwap takes a Register dst and return the byte swap of dst into dst-/
   | bSwap : Register -> Statement
-  /--ja take an Integer offset and add offset to pc-/
+  /--ja takes an Integer offset and add offset to pc-/
   | ja : Int -> Statement
-  /--jeq take an Argument src, a Register dst, an Integer offset add offset to pc if dst==src-/
+  /--jeq takes an Argument src, a Register dst, an Integer offset add offset to pc if dst==src-/
   | jeq : Argument -> Register -> Int -> Statement
-  deriving Inhabited
+  /-- exit ends the program-/
+  | exit : Statement
+  deriving Inhabited, BEq
 
 /--Program is the Type that represent eBPF program and is simply made of Statement-/
 abbrev Program : Type := List Statement
 
+/-structure State where
+  pc : Int
+  reg : Register -> Int
+-/
+
 /-- State is a structure that represent a state of a program with pc(program counter) representing the position in the program and data representing the values of each register-/
 structure State where
   pc : Int
-  reg : Register -> Int
+  reg : Register -> RegisterValue
