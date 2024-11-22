@@ -1,4 +1,5 @@
 import Projet.Syntaxe_eBPF
+import Projet.Semantic_eBPF
 
 /-- Verifier is the Type of function from Program to Bool-/
 abbrev Verifier : Type := Program -> Bool
@@ -23,4 +24,21 @@ def v_trivial : Verifier := (fun p : Program => true)
 /-- vExit is the Verifier that check if the last Statement is exit-/
 def vExit : Verifier := (fun p : Program => ((p[p.length]!) == Statement.exit))
 
+/-- vR0 is the Verifier that check if Register.reg0 has been initialize-/
 def vR0 : Verifier := (fun p : Program => ((p[p.length]!) == Statement.exit))
+
+/-def vStateZero : Verifier :=
+    (fun p : Program => (∀ s0 : State , ∃ s1 : State, Semantics p s0 s1))
+-/
+
+def vAdd02 : Verifier := (fun p : Program => ((p[1]!) != Statement.add (Argument.reg Register.reg0) Register.reg2))
+def vAdd03 : Verifier := (fun p : Program => ((p[1]!) != Statement.add (Argument.reg Register.reg0) Register.reg3))
+def vAdd04 : Verifier := (fun p : Program => ((p[1]!) != Statement.add (Argument.reg Register.reg0) Register.reg4))
+def vAdd05 : Verifier := (fun p : Program => ((p[1]!) != Statement.add (Argument.reg Register.reg0) Register.reg5))
+def vAdd20 : Verifier := (fun p : Program => ((p[1]!) != Statement.add (Argument.reg Register.reg2) Register.reg0))
+def vAdd23 : Verifier := (fun p : Program => ((p[1]!) != Statement.add (Argument.reg Register.reg2) Register.reg3))
+def vAdd24 : Verifier := (fun p : Program => ((p[1]!) != Statement.add (Argument.reg Register.reg2) Register.reg4))
+def vAdd25 : Verifier := (fun p : Program => ((p[1]!) != Statement.add (Argument.reg Register.reg2) Register.reg5))
+
+/-ValidStatement-/
+

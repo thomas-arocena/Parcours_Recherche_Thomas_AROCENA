@@ -35,6 +35,7 @@ inductive RegisterValue
   |scalar_value : Val -> RegisterValue
   /-- Register has not been initialize -/
   |not_init
+  deriving BEq
 
 /-- Argument is the Type for eBPF expressions-/
 inductive Argument
@@ -43,8 +44,6 @@ inductive Argument
   /-- imm is an Argument from an immediate value-/
   | imm : Val -> Argument
   deriving BEq
-
-
 
 /-- Statement is the type for eBPF instructions -/
 inductive Statement
@@ -76,3 +75,19 @@ abbrev Program : Type := List Statement
 structure State where
   pc : Int
   reg : Register -> RegisterValue
+
+#check State
+
+def P0 (s : State) : Prop := (s.reg Register.reg0 == RegisterValue.not_init)
+def P2 (s : State) : Prop := (s.reg Register.reg2 == RegisterValue.not_init)
+def P3 (s : State) : Prop := (s.reg Register.reg3 == RegisterValue.not_init)
+def P4 (s : State) : Prop := (s.reg Register.reg4 == RegisterValue.not_init)
+def P5 (s : State) : Prop := (s.reg Register.reg5 == RegisterValue.not_init)
+
+def P (s : State) : Prop :=  P2 s ∧ P3 s ∧ P4 s ∧ P5 s ∧ P0 s
+
+def StateInit : Type := {s : State // P s}
+
+def Pend (s : State) : Prop := (s.reg Register.reg0 != RegisterValue.not_init)
+
+def StateEnd : Type := {s : State // P s}
