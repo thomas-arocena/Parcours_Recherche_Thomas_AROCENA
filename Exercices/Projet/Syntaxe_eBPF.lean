@@ -78,16 +78,19 @@ structure State where
 
 #check State
 
+def Stack_pointer := 1
+
 def P0 (s : State) : Prop := (s.reg Register.reg0 == RegisterValue.not_init)
+def P1 (s : State) : Prop := (s.reg Register.reg1 == RegisterValue.pointer Stack_pointer)
 def P2 (s : State) : Prop := (s.reg Register.reg2 == RegisterValue.not_init)
 def P3 (s : State) : Prop := (s.reg Register.reg3 == RegisterValue.not_init)
 def P4 (s : State) : Prop := (s.reg Register.reg4 == RegisterValue.not_init)
 def P5 (s : State) : Prop := (s.reg Register.reg5 == RegisterValue.not_init)
 
-def P (s : State) : Prop :=  P2 s ∧ P3 s ∧ P4 s ∧ P5 s ∧ P0 s
+def P (s : State) : Prop :=  P1 s ∧ P2 s ∧ P3 s ∧ P4 s ∧ P5 s ∧ P0 s
 
 def StateInit : Type := {s : State // P s}
 
-def Pend (s : State) : Prop := (s.reg Register.reg0 != RegisterValue.not_init)
+def Pend (s : State) : Prop := (s.reg Register.reg0 == RegisterValue.scalar_value 1)
 
 def StateEnd : Type := {s : State // P s}

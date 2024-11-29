@@ -10,24 +10,21 @@ def update(g : (Register → RegisterValue))(α : Register)(v : RegisterValue) :
 def add(src : Argument)(dst : Register)(s : State) : State :=
   match src with
   |Argument.imm v_src => match (s.reg dst) with
-    |RegisterValue.not_init => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.scalar_value v_src)}
+    |RegisterValue.not_init => {pc := s.pc + 1, reg := s.reg}
     |RegisterValue.pointer dst_ptr => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.pointer (v_src + dst_ptr))}
     |RegisterValue.scalar_value dst_val => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.scalar_value (v_src + dst_val))}
   |Argument.reg r_src => match (s.reg r_src) with
-    |RegisterValue.not_init => match (s.reg dst) with
-      |RegisterValue.not_init => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.not_init)}
-      |RegisterValue.pointer dst_ptr => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.pointer dst_ptr)}
-      |RegisterValue.scalar_value dst_val => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.scalar_value dst_val)}
+    |RegisterValue.not_init => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.not_init)}
     |RegisterValue.pointer ptr => match (s.reg dst) with
-      |RegisterValue.not_init => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.scalar_value ptr)}
+      |RegisterValue.not_init => {pc := s.pc + 1, reg := s.reg}
       |RegisterValue.pointer dst_ptr => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.scalar_value (ptr + dst_ptr))}
       |RegisterValue.scalar_value dst_val => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.pointer (ptr + dst_val))}
     |RegisterValue.scalar_value val => match (s.reg dst) with
-      |RegisterValue.not_init => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.scalar_value val)}
+      |RegisterValue.not_init => {pc := s.pc + 1, reg := s.reg}
       |RegisterValue.pointer dst_ptr => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.pointer (val + dst_ptr))}
       |RegisterValue.scalar_value dst_val => {pc := s.pc + 1, reg := update s.reg dst (RegisterValue.scalar_value (val + dst_val))}
+/- Le seul moment ou dst = not_init a la fin, c'est quand add est non valide, on pourrait utiliser ça pour le Register Tracking ?-/
 
-  /-{pc := s.pc + 1, reg := update s.reg dst ((s.reg dst) + (s.reg r_src))}-/
 
 /--Function that takes an Argument src, a Register dst ans a State s and return a new State where pc+=1 and dst = dst or src-/
 def or_(src : Argument)(dst : Register)(s : State) : State :=
@@ -99,19 +96,19 @@ def setRange : ℕ → Set ℕ
 
 
 /--Defining the relation from a State to another-/
-inductive Semantics (p : Program) : State -> State -> Prop
+inductive ConcreteSemantics (p : Program) : State -> State -> Prop
   | ja_ (s0 s1 : State) :
       (∃ (k : Nat), (s0.pc>=0) ∧ ((s0.pc).toNat ∈ (setRange p.length)) ∧ (p[(s0.pc).toNat]! = Statement.ja k ) → (s1 = ja k s0))
-      → Semantics p s0 s1
+      → ConcreteSemantics p s0 s1
   | add (s0 s1 : State) :
       (∃ (src : Argument), ∃ (dst : Register),(s0.pc >=0)∧(s0.pc<=p.length) ∧ (p[(s0.pc).toNat]! = Statement.add src dst) → (s1 = add src dst s0))
-      → Semantics p s0 s1
+      → ConcreteSemantics p s0 s1
   | mov (s0 s1 : State) :
       (∃ (src : Argument), ∃ (dst : Register), (s0.pc >=0)∧(s0.pc<=p.length) ∧ (p[(s0.pc).toNat]? = Statement.mov src dst) → (s1 = mov src dst s0))
-      → Semantics p s0 s1
+      → ConcreteSemantics p s0 s1
   | jed (s0 s1 : State) :
       (∃ (src : Argument), ∃ (dst : Register), ∃ (offset : Int), (s0.pc >=0)∧(s0.pc<=p.length) ∧ (p[(s0.pc).toNat]? = Statement.jeq src dst offset) ∧ ((s0.pc+offset) >=0)∧((s0.pc+offset)<=p.length) → (s1 = jeq src dst offset s0))
-      → Semantics p s0 s1
+      → ConcreteSemantics p s0 s1
   | or (s0 s1 : State) :
       (∃ (src : Argument), ∃ (dst : Register),(s0.pc >=0)∧(s0.pc<=p.length) ∧ (p[(s0.pc).toNat]? = Statement.or src dst) → (s1 = or_ src dst s0))
-      → Semantics p s0 s1
+      → ConcreteSemantics p s0 s1
