@@ -1,0 +1,389 @@
+\documentclass[a4paper,french, 12pt]{article}
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath}
+\usepackage[many]{tcolorbox}
+\usetikzlibrary{calc}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{lastpage}
+\usepackage{fancyhdr}
+\usepackage{fancybox}
+\usepackage{dsfont}
+\usepackage{accents}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows,calc,fit}
+\tikzset{box/.style={draw, rectangle, thick, node distance=6em, text width=6em, text centered, minimum height=3.5em , minimum width = 8em , fill=blue!10}}
+\tikzset{container/.style={draw, rectangle, dashed, inner sep=1em}}
+\tikzset{line/.style={draw, thick, -latex'}}
+\pagestyle{fancy}
+\setlength{\headheight}{40pt}
+\usepackage{stmaryrd}
+\usepackage[french]{babel}
+\usepackage{enumitem}
+\usepackage{listings}
+\geometry{hmargin=2.5cm,vmargin=1.5cm}
+\renewcommand*{\overrightarrow}[1]{\vbox{\halign{##\cr 
+			\tiny\rightarrowfill\cr\noalign{\nointerlineskip\vskip1pt} 
+			$#1\mskip2mu$\cr}}}
+\DeclareMathOperator{\Ima}{Im}
+\DeclareMathOperator{\Id}{Id}
+\DeclareMathOperator{\R}{\mathbb{R}}
+\DeclareMathOperator{\N}{\mathbb{N}}
+\DeclareMathOperator{\Z}{\mathbb{Z}}
+\DeclareMathOperator{\C}{\mathbb{C}}
+\DeclareMathOperator{\Q}{\mathbb{Q}}
+\DeclareMathOperator{\K}{\mathbb{K}}
+\let\ker\relax\DeclareMathOperator{\ker}{Ker}
+\definecolor{myblue}{RGB}{65,100,250}
+
+\tcbset{mystyle/.style={
+		breakable,
+		enhanced,
+		outer arc=0pt,
+		arc=0pt,
+		colframe=myblue,
+		colback=myblue!20,
+		attach boxed title to top left,
+		boxed title style={
+			colback=myblue,
+			outer arc=0pt,
+			arc=0pt,
+			top=3pt,
+			bottom=3pt,
+		},
+		fonttitle=\sffamily
+	}
+}
+\newtcolorbox[auto counter,number within=section]{Partie}[1][]{
+	mystyle,
+	title=Partie~\thetcbcounter,
+	overlay unbroken and first={
+		\path
+		let
+		\p1=(title.north east),
+		\p2=(frame.north east)
+		in
+		node[anchor=west,font=\sffamily,color=myblue,text width=\x2-\x1] 
+		at (title.east) {#1};
+	}
+}
+\newtcolorbox[auto counter]{assumption}[1][]{
+	mystyle,
+	colback=white,
+	rightrule=0pt,
+	toprule=0pt,
+	title=Assumption SLR.\thetcbcounter,
+	overlay unbroken and first={
+		\path
+		let
+		\p1=(title.north east),
+		\p2=(frame.north east)
+		in
+		node[anchor=west,font=\sffamily,color=myblue,text width=\x2-\x1] 
+		at (title.east) {#1};
+	}
+}
+
+\setlength{\headheight}{2cm}
+\setlength{\headsep}{0.6cm}
+\setlength{\textheight}{26.cm} % hauteur corps texte = \textheight
+%
+% Largeur du texte:
+\setlength{\textwidth}{17,5cm}
+\setlength{\oddsidemargin}{-0.5cm}
+\setlength{\evensidemargin}{0.cm}
+\setlength{\marginparsep}{0.cm} 
+
+\begin{document}
+	\lhead{Thomas Arocena IM} 
+	\rhead{\today} 
+	\cfoot{\thepage\ / \pageref{LastPage}}
+	\noindent \begin{center}
+		\shadowbox{\textbf{Parcours recherche}}
+		\end{center}
+		
+		\noindent\textbf{\underline{Simplification et choix du jeu d'instructions}}\\
+
+		Dans un premier temps, j'utilise des hypothèses simplificatrices :
+		\begin{enumerate}
+		\item Les registres ont deux états possibles : initialisé ou non. Les registres initialisés contiennent une valeur entière.
+		\item La pile (\textit{Stack}) ne contient que des offsets pour les appels de fonctions (\textit{function calls}).
+		\item Le jeu d'instructions est réduit.
+		\item Un programme passe 5 entiers en arguments stockés dans $R_1, R_2, R_3 , R_4,  R_5$ en entrée.
+		\item L'état abstrait contient : \begin{enumerate}
+		\item L'état du registre : initialisé ou non.
+		\item Un intervalle de valeurs.
+		\item Un nombre tristate qui représente la connaissance que l'on a sur les bits.\\
+		\end{enumerate}
+		\end{enumerate}
+
+		Le but de ces hypothèses est d'éviter l'arithmétique des pointeurs, qui implique une formalisation laborieuse de la mémoire.
+		 Se limiter dans le jeu d'instructions permet d'analyser le fonctionnement de programmes simples dans un premier temps, puis d'ajouter des instructions progressivement pour tendre vers des programmes réels.
+		 Le jeu d'instructions doit donc être réduit dans un premier temps sans être trop limité, auquel cas on ne représente pas un langage fonctionnel.\\
+
+		Jeu d'instructions :
+		\begin{itemize}
+		\item Instructions arithmétiques
+		\begin{itemize}
+		\item Addition (\textit{Add})
+		\item Soustraction (\textit{Sub})
+		\item Multiplication (\textit{Mul})
+		\item OU binaire (\textit{Or})
+		\item ET binaire (\textit{And})
+		\item Affectation (\textit{Mov})
+		\end{itemize}
+		\item Instructions de saut
+		\begin{itemize}
+		\item Saut simple (\textit{Ja})
+		\item Saut sous condition d'égalité (\textit{Jeq})
+		\end{itemize}
+		\item Appel de fonction (\textit{Call})
+		\item Renvoi de valeur (\textit{Exit})\\
+		\end{itemize}
+
+		Avec ce jeu d'instructions, on peut formaliser un petit langage qui est déjà intéressant à étudier.\\
+		
+		\noindent\textbf{\underline{Syntaxe}}\\
+
+		\begin{itemize}
+		\item On représente un programme comme une liste d'instructions où les instructions sont celles du jeu d'instructions mentionné précédemment.
+		\item On représente les registres par 11 objets : $R_0, R_1, R_2, R_3 , R_4,  R_5,  R_6,  R_7,  R_8,  R_9,  R_{10}$\
+		\item On définit un argument comme un registre ou un entier.
+		\item On définit la pile comme une liste d'entiers.
+		\end{itemize}
+		
+		\noindent\textbf{\underline{Sémantique abstraite}}\
+		\begin{enumerate}
+		\item \textbf{\underline{État du système :}}\\
+		Un état est représenté par trois informations :
+		\begin{itemize}
+		\item Le compteur du programme (\textit{Program counter}), noté $pc$, représente où l'on se situe dans le programme, autrement dit l'indice dans la liste d'instructions qui représente le programme.
+		\item L'information des valeurs abstraites contenues dans chaque registre.
+		\item La pile.
+		\end{itemize}
+		Dans la suite, on notera un état du système comme suit :
+		
+		où $reg$ est une fonction de $Register$ vers l'ensemble des valeurs abstraites noté $AbsRegisterValue$.\\
+
+		\item \textbf{\underline{Valeur abstraite des registres (AbsRegisterValue) :}}\\
+		À chaque registre, on associe un état initialisé ou non. Pour les registres initialisés, on considère :
+		\begin{itemize}
+		\item L'intervalle des valeurs possibles.
+		\item Le nombre tristate des bits possibles.\\
+		\end{itemize}
+
+		\item \textbf{\underline{Représentation des nombres tristates:}}\\
+		De manière générale, on représente un nombre tristate avec des 0 et 1 là où l'on a de l'information, et des points d'interrogation autrement.\\
+		Ex : 011\textcolor{red}{?}1\textcolor{red}{??}0\\
+		Mais cette représentation n'est pas efficace pour les calculs. On considère donc plutôt 2 nombres binaires : un appelé masque, qui représente la position des inconnus par des 1 et les autres par des 0, et un appelé valeur, qui représente les bits connus et met des zéros aux inconnus.\
+		Ex : 011\textcolor{red}{?}1\textcolor{red}{??}0 $\to$ (00010110 (masque), 01101000 (valeur))\\
+	
+		\item \textbf{\underline{Instructions arithmétiques:}}\\
+		Les instructions arithmétiques ne contiennent ni saut, ni appel de fonction donc le compteur du programmes passera toujours au rang suivant.
+		 De la même manière la pile restera inchangée.
+		Toute instruction arithmétique prenant en source un Argument correspondant à un registre non initialisé sera rejeté.
+		\begin{enumerate}
+			\item Addition :\\
+			Pour des intervalles $i_1 = [a,b]$ et $i_2 = [c,d]$, et un entier $\lambda$:
+			$$i_1 + i_2 = [a,b] + [c,d] = [a+c, b+d]$$
+			$$i_1 + \lambda = [a,b] + \lambda =[a +\lambda,b + \lambda]$$
+			Pour les nombres tristates :  Soit $t_1$ et $t_2$ deux nombres tristates
+			$$ s_v = t_1.v + t_2.v$$
+			$$ s_m = t_1.m + t_2.m$$
+			$$ S = s_v + s_m$$
+			$$ q = S \oplus s_v $$
+			$$ h = q \lor t_1.m \lor t_2.m $$
+			$$ t_1 + t_2 = (h \text{ (masque) },s_v \& \neg h \text{ (valeur) }) $$
+			où $\oplus$ est le OU exclusif, $\lor$ est le OU inclusif, $\&$ est le ET et $\neg$ est la négation.\\
+			Si on additionne avec une valeur immédiate $\lambda$ le calcul est identique avec $\lambda.v = \lambda$ et $\lambda.m = 0$\\
+			\textit{exemple :} $([5,7],0? ) + ([1,3],?1)$\\
+			pour les intervalles $[5,7] + [1,3] = [6,10]$\\
+			pour les tristates $ 0? = (01,00) $ et $?1 = (10,01)$ alors :
+			$$ s_v = t_1.v + t_2.v = 00 + 01 = 01 $$
+			$$ s_m = t_1.m + t_2.m = 01 + 10 = 11 $$
+			$$ S = s_v + s_m = 01 + 11 = 100 $$
+			$$ q = S \oplus s_v = 100 \oplus 001 = 101 $$
+			$$ h = q \lor t_1.m \lor t_2.m = 101 \lor 001 \lor 010 = 111 $$
+			$$ t_1 + t_2 = (h ,s_v \& \neg h) = (111, 000)$$
+			On obtient $([5,7],0? ) + ([1,3],? 1) = ([6,10],???)$\\
+
+			Soit $R_m = (\text{initalisé},i_1,t_1)$ le registre de destination.\\
+			\underline{Pour une source qui est un registre  $R_k = (\text{initalisé},i_2,t_2)$ on a} :
+			$$ s = \{pc, reg , stack\} \to \{pc + 1, reg', stack\} $$
+			où $reg'(R_n) = reg(R_n)$ si $n\neq m$ et $reg'(R_m)=(\text{initalisé},i_1+i_2,t_1+t_2)$\\
+
+			\underline{Pour une source qui est un registre une valeur immédiate $\lambda$ on a} :
+			$$ s = \{pc, reg , stack\} \to \{pc + 1, reg', stack\} $$
+			où $reg'(R_n) = reg(R_n)$ si $n\neq m$ et $reg'(R_m)=(\text{initalisé},i_1+\lambda,t_1+\lambda)$\\
+
+			\item Soustraction :\\
+			Pour les intervalles:
+			$$[a,b] + [c,d] = [a-d, b-c]$$\\
+
+			\item Multiplication :\\
+			Pour les intervalles:
+			$$[a,b] + [c,d] = [a*c, b*d]$$\\
+
+			Pour les tristates :\\
+			\hspace*{6cm}$S_v = (0 , t_1.v*t_2.v)$\\
+			\hspace*{6cm}$S_m = (0 , 0)$\\
+			\hspace*{6cm}$\text{Tant que }(t_1.v \lor t_1.m \neq 0) : $\\
+			\hspace*{7cm} $\text{Si } t_1.m[0] = 1 :$\\
+			\hspace*{8cm} $ S_m = S_m + (t_2.v \lor t_2.m , 0) $\\
+			\hspace*{7cm} $\text{Sinon si } t_2.v[0] = 1 :$\\
+			\hspace*{8cm} $ S_m = S_m + (t_2.m , 0) $\\
+			\hspace*{7cm} $t_1 = \text{Rshift}(t_1,1) $\\
+			\hspace*{7cm} $t_2 =\text{Lshift}(t_2,1) $\\
+			\hspace*{6cm}$t_1 * t_2 = S_v + S_m$\\
+
+			où Rshift supprime le dernier bits à droite et Lshift supprime le dernier bits à gauche.\\
+
+			\item OU binaire :\\
+			Pour les nombres tristates : 
+			$$ t_1 \lor t_2 = ((t_1.v \lor t_2.m) \land (t_1.m \lor t_2.v),t_1.v \lor x.v)$$\\
+			Pour les intervalles :\\
+			On ne fait pas ici un calcul exacte mais on utilise les tristates associés aux intervalles pour calculer plus rapidement une abstraction :
+			$$ I_1 = [a,b], t_1, I_2 = [x,y], t_2 $$
+			$$ t_3 = t_1 \lor t_2 $$ 
+			$$ I_1 \lor I_2 = (max(a,x), t_3.v \lor t_3.m)$$
+
+			\item ET binaire :\\
+			Pour les nombres tristates :
+			$$ t_1 \wedge t_2 = (t_1.v \wedge t_2.v,(t_1.v \wedge t_1.m) \lor (t_1.m \wedge t_1.v))$$
+			Pour les intervalles :\\
+			Idem que pour le OU
+			$$ I_1 = [a,b], t_1, I_2 = [x,y], t_2 $$
+			$$ t_3 = t_1 \wedge t_2 $$
+			$$ I_1 \wedge I_2 = (t_3.v, min(b,y))$$
+
+		
+			\item Affectation :\\
+			Dans les deux cas on affecte juste la valeur.\\
+
+		\end{enumerate}
+		\item \textbf{\underline{Instructions de saut:}}\\
+		Les instructions de saut ne contiennent pas d'appel de fonction, mais jouent sur le compteur du programme. 
+		La pile restera inchangée.
+		\begin{enumerate}
+			\item Saut simple :\\
+			Pour un offset $d$ on a :
+			$$ s = \{pc, reg , stack\} \to \{pc + d, reg, stack\} $$
+			\item Saut sous condition d'égalité :\\
+			Dans ce cas on a une complexité supplémentaire, c'est que, dans le cas abstrait, on ne peut pas toujours décider quelle branche prendre. Il faudra alors prendre les deux branches.
+			\begin{center}
+			\begin{tikzpicture}[auto]
+		
+				\node [box, fill=blue!20] (instr1) {Saut de $k$ sous condition $P$};
+				\node [box, below of=instr1] (instr2) {instruction $n$};
+				\node [box, below of=instr2] (instrp) {instruction $n+k-1$};
+				\node [box, below of=instrp, fill=blue!20] (instrp1) {instruction $n+k$};
+				\node [box, below of=instrp1, fill=blue!20] (exit) {exit};
+			
+				\coordinate (middle) at ($(instr2.west)!0.5!(instrp.west)$);
+				%\node [box, left of=middle, node distance=10em] (archive) {Archive};
+				%\node [box, left of=archive, node distance=10em] (reporting) {Reporting};
+			
+				\node[container, fit=(instr2) (instrp)] (non) {};
+				\node at (non.north west) [above right,node distance=0 and 0] {$\neg P$};
+			
+				\path [line] (instr1) -- (instr2);
+				%\path [line] (resources) -- (sensors);
+				\path [line] (instrp) -- (instrp1);
+				\node [font=\Large] at ($(instr2)!.5!(instrp)$) {\vdots};
+				\node [font=\Large] at ($(instrp1)!.5!(exit)$) {\vdots};
+			
+				%\path [line] (instr1) |- (instrp);
+				%\path [line] (archive) |- (processing);
+				%\path [line] (processing)--($(processing.south)-(0,0.5)$) -| (reporting);
+			
+				\draw [line] (instr1.east) -- ++(1,0) node(lowerright){} |- (instrp1.east);
+				\draw [line] (instr1.west) -- ++(-1,0) node(lowerleft){} |- (instr2.west);
+				%\draw [line] (lowerright |- or.east) -- (or.east -| resources.south east);
+			
+				%\draw[line] (archive.170)--(reporting.10);
+				%\draw[line] (reporting.350)--(archive.190);
+			\end{tikzpicture}
+		\end{center}
+		On a une condition d'égalité : $R_1 = R_2$ par exemple\\
+		Si $R_1$ et $R_2$ n'ont aucune valeur concretes en commun possible, i.e si les intervalles sont disjoints, alors on est sur que la condition ne sera pas vérifié.
+		Sinon on passe dans vrai l'etat ou l'on a affecter l'intersection des valeurs possibles de $R_2$ et de $R_1$ à $R_1$ et on passe à faux $R_1$ inchangé.\\
+		ex : $R_1 = [0,3], R_2 = [4,5] \to $ on prend la branche faux\\
+		$R_1 = [4,10], R_2 = [3,5] \to $ on prend la branche faux avec $R_1 = [4,10]$ et la branche vrai avec $R_1 = [4,5]$\\
+
+		Intersection d'intervalles :
+		$$ I_1 = [a,b], I_2 = [x,y]$$
+		$$ I_1 \cap I_2 = [max(a,x),min(b,y)]$$
+
+		Intersection de tristates :
+		$$ t_1 = (v_1,m_1), t_2 = (v_2, m_2) $$
+		$$ t_1 \cap t_2 = ((v_1 \lor v_2)\land \neg (m_1\land m_2),m_1\land m_2)$$
+
+		\end{enumerate}
+		\item \textbf{\underline{Appel de fonction:}}\\
+		Soit un offset $d$ et $p$ le compteur du programme à l'état actuel. Alors on considère le programme composé des instructions comprises entre $p+d$ et la prochaine instruction $Exit$.
+		 Ce sous-programme correspond à une fonction. \`A l'instant $p$ les valeurs de $R_1,R_2,\dots,R_5$ sont les arguments passés à la fonction.\\
+		\underline{Fonctionnement de la pile :} pour cela on a besoin de s'intéresser à la pile. \` chaque appel on stocke dans la pile l'indice $p$ de l'instruction $Call$.
+		 On parcourt linéairement la fonction à partir de l'indice $p+d$.Quand on a parcouru la fonction jusqu'au bout, après $Exit$, on passe au rang $p+1$ et on supprime $p$ de la pile.
+		\item \textbf{\underline{Stockage des états}}\\
+		A chaque instruction on associe une case. On démarre avec un etat abstrait initial dans la premiere case. On suit linéairement les instructions jusqu'a un conditionnement. Lorsque on fait un conditionnement 
+		\begin{center}
+			\begin{tikzpicture}[auto]
+		
+				\node [box, fill=blue!20] (instr1) {Si $R_1 >= 5$ goto 3};
+				\node [box, below of=instr1] (instr2) {$R_1 = R_1 + 5$};
+				\node [box, below of=instr2] (instrp) {$R_1 = R_1*2$};
+				\node [box, below of=instrp, fill=blue!20] (exit) {exit};
+			
+				\coordinate (middle) at ($(instr2.west)!0.5!(instrp.west)$);
+				%\node [box, left of=middle, node distance=10em] (archive) {Archive};
+				%\node [box, left of=archive, node distance=10em] (reporting) {Reporting};
+			
+				\node[container, fit=(instr2)] (non) {};
+				\node at (non.north west) [above right,node distance=0 and 0] {$R_1 < 5$};
+			
+				\path [line] (instr1) -- (instr2);
+				\path [line] (instr2) -- (instrp);
+				%\path [line] (resources) -- (sensors);
+				\node [font=\Large] at ($(instrp)!.5!(exit)$) {\vdots};
+			
+				%\path [line] (instr1) |- (instrp);
+				%\path [line] (archive) |- (processing);
+				%\path [line] (processing)--($(processing.south)-(0,0.5)$) -| (reporting);
+			
+				\draw [line] (instr1.east) -- ++(1,0) node(lowerright){} |- (instrp.east);
+				\draw [line] (instr1.west) -- ++(-1,0) node(lowerleft){} |- (instr2.west);
+				%\draw [line] (lowerright |- or.east) -- (or.east -| resources.south east);
+			
+				%\draw[line] (archive.170)--(reporting.10);
+				%\draw[line] (reporting.350)--(archive.190);
+			\end{tikzpicture}
+		\end{center}
+		Avec en entrée par exemple $R_1 = [0;10]$, on exécute ainsi :
+		\begin{enumerate}[label=\textbf{I.\arabic*}]
+			\item On a pas assez d'information pour savoir quelle branche prendre. On coupe est on prend la branche sans le saut.
+			 On a donc $R_1=[0,4]$ passé à l'instruction 2. On stocke $R_1 = [5,10]$ et pc = 3 pour la suite.
+			\item De pc = 2, $R_1=[0,4]$ on passe à pc = 3, $R_1 = [5,9]$
+			\item De pc = 3, $R_1 = [5,9]$ on passe à pc = 4, $R_1 = [10,18]$
+			\item On continue jusque exit. Puis on retourne à la valeur stockés.
+			\item De pc = 3, $R_1 = [5,10]$ on passe à pc = 4, $R_1 = [10,20]$. Il est important de remarqué que ici, l'instruction 3 à déja ete visité.
+			 Lors du passage précedent, on avait $R_1 = [5,9]$. Si l'on avait eu par exemple $R_1 = [5,11]$ alors on aurait pu s'arreter là car on aurait déja parcouru toute les branches avec un état abstrait incluant $R_1 = [5,10]$
+			\item On continue jusque exit. 
+		\end{enumerate}
+	\item \textbf{\underline{Pruning, concaténation des états}}
+		Il suffit de vérifié que lorsqu'on arrive dans un état déja visité, l'on n'a pas déja parcouru la suite avec un état abstrait "plus grand" au sens de l'inclusion.
+		Inclusion pour les intervalles :\\
+		$$ I_1 = [a,b], I_2 = [x,y]$$
+		$$ I_2 \subseteq I_1\Leftrightarrow (a\leq x) \wedge (y\leq b)$$  
+		Inclusion pour les tristates :\\
+		$$ t_1 = (v_1,m_1), t_2 = (v_2, t_2) $$
+		$$ t_2 \subseteq t_1\Leftrightarrow (m_1 \cup m_2 = m_1)\wedge (v_1 = (v_2 \oplus m_1))$$
+		En effet il faut que tout les bits connues de $t_1$ soit les mêmes pour $t_2$. La premiere condition assure que l'on a pas d'inconnus chez $t_2$ qui sont connu chez $t_1$. La deuxieme condition assure que les valeurs connues de $t_1$ sont les mêmes chez $t_2$\\
+
+		On peut alors faire de la concaténation d'état:
+		$$A_2 = (I_2, t_2) \subseteq A_1 = (I_1, t_1) \Leftrightarrow (I_2 \subseteq I_1)\wedge(t_2 \subseteq t_1)$$
+		Dans ce cas on a $$s_2 = \{pc=k, R_1 = (I_2, t_2)\} \subseteq s_1 = \{pc=m, R_1 = (I_1, t_1)\}\Leftrightarrow (k=m)\wedge((I_2,t_2)\subseteq(I_1,t_2))$$
+
+	\item 
+	\end{enumerate}
+\end{document}
