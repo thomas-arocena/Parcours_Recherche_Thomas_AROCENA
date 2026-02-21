@@ -22,9 +22,9 @@ This research project served as my first in-depth exposure to **formal methods**
 
 The full academic materials are available in french:
 
-- [Final Report]()
-- [Long Presentation]()
-- [Short Presentation]()
+- [Final Report](report/rapport.pdf)
+- [Long Presentation](report/soutenance.pdf)
+- [Short Presentation](report/soutenance-flash.pdf)
 
 ---
 
@@ -78,5 +78,6 @@ The work followed a classical abstract interpretation pipeline:
 - Structured abstraction of selected eBPF operations  
 
 ---
+
 
 
