@@ -1,4 +1,4 @@
-# Formalizing eBPF through Abstract Interpretation  
+# Formalizing eBPF in Lean 4 through Abstract Interpretation
 ### Research Track Project – 2025  
 **Thomas AROCENA**  
 Mines Nancy – Engineering School (2nd year)
@@ -78,6 +78,7 @@ The work followed a classical abstract interpretation pipeline:
 - Structured abstraction of selected eBPF operations  
 
 ---
+
 
 
 
